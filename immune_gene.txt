@@ -1,0 +1,27 @@
+TRB
+Genes appear along the reference in the order of 66 V genes, D1-(6)J1-C1 genes, D2-(8)J2-C2 genes, and V30 gene. All genes are on the plus strand except for TRBV30.
+Pseudogenes: 
+
+TRAD
+TRA has no D gene while TRD has.
+Genes appear along the reference in the order of 56 A/DV genes, 3 DD genes, 4 DJ genes, 1 DC gene, 1 DV3 gene, 61 AJ genes, and 1 AC gene.
+There are 54 AV and 8 DV genes, among which 6 V genes are shared by TRA and TRD.
+All genes are on the plus strand except for TRDV3.
+
+TRG
+Genes appear along the reference in the order of 14 V genes, (3)J1-C1 genes, and (2)J2-C2 genes.
+All genes are on the plus strand.
+
+IGH
+Genes appear along the reference in the order of 127 V genes, 30 D genes, 9 J genes, and 5 different constant genes: 1 M, 1 D, 2 G, E1, A1, 3 G, E2, A2.
+All genes are on the plus strand.
+
+IGL
+Genes appear along the reference in the order of 73 V genes, and 7 J-C genes.
+All genes are on the plus strand.
+
+IGK
+There are two IGK gene clusters: proximal and distal.
+The reference starts with proximal genes on the plus strand and distal genes on the negative strand.
+The proximal genes appear in the order of 40 V genes and 5 J genes.
+All the 37 distal genes are V genes.

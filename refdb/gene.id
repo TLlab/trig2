@@ -1,0 +1,7 @@
+# get reference sequence and genbank info of TCR and BCR genes from NCBI
+# human TRAD : NG_001332
+# human TRB  : NG_001333
+# human TRG  : NG_001336
+# human IGH  : NG_001019
+# human IGL  : NG_000002
+# human IGK  : NG_000834 (proximal), NG_000833 (distal)

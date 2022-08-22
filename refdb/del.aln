@@ -1,0 +1,15 @@
+usearch -usearch_global del.fa -db hsa_igkp.fa -id 0.8 -strand both -alnout del.aln 
+usearch v11.0.667_i86linux64, 148Gb RAM, 48 cores
+
+Query >test
+ %Id   TLen  Target
+100%  473561  hsa_igkp
+
+ Query     76nt >test
+Target 473561nt >hsa_igkp
+
+Qry      1 + AAGCATTGAGTTTACTGCAAGGTCAGAAAAGCATGCAAAGCCCTCAGAATGGCTGCAAAGAGCTCCAACAAAACAA 76
+             ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+Tgt 472951 + AAGCATTGAGTTTACTGCAAGGTCAGAAAAGCATGCAAAGCCCTCAGAATGGCTGCAAAGAGCTCCAACAAAACAA 473026
+
+76 cols, 76 ids (100.0%), 0 gaps (0.0%)
