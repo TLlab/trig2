@@ -2,27 +2,30 @@ TRIg-2.0
 
 1. Installation
 --------------------------------------------------------------------------------
-TRIg is written in perl, cpp and requires MUMMER for initial alignments. Users must 
-install MUMMER, which can be obtained from http://mummer.sourceforge.net/. 
-TRIg are ready for use after decompressing the tarball as follows.
+TRIg is written in perl, cpp and requires USEARCH for merge paired-end and
+MUMMER for initial alignments. Users must install USEARCH and MUMMER.
+They can obtained as follows:
+* USEARCH: "https://www.drive5.com/usearch/"
+* MUMMER : "http://mummer.sourceforge.net/"
+TRIg are ready for use after clone as follows.
 --------------------------------------------------------------------------------
 
 > git clone https://github.com/TLlab/trig2.git
 > cd trig2
+> make clean
 > make
 
 Then add the directory trig2/bin to your $PATH. Also make sure that the folder
-containing the mummer commands is in the $PATH.
+containing the mummer and usearch commands are in the $PATH.
 
 
 2. Running program
 ---------------------------------------------------------------------------------------------------------
-usage  : trig.pl [options] read.fq/a
-e.g.   : trig.pl -s hsa -g trb -o test read.fq
+usage  : trig.pl [options] R1.fq R2.fq
+e.g.   : trig.pl -s hsa -g trb -o test R1.fq R2.fq
 
 option : -species  <str>    species name                 [hsa*, mmu] (*default)
          -gene     <str>    immune receptor gene         [tra, trb*, trd, trg, igh, igl, igk]
-                            can also be combined, e.g.,  [tra,trb]
          -outdir   <str>    output directory name        [output*]
          -minmatch <int>    minimal match of nucmer      [15*]
          -adjolq   <int>    adjust overlap Q             [0, 1*]
@@ -31,9 +34,6 @@ option : -species  <str>    species name                 [hsa*, mmu] (*default)
          -thread   <int>    number of processors         [1*]
 
 ---------------------------------------------------------------------------------------------------------
-
-To run TRIg on sample data, use the following sample command when in the TRIg folder.
-> trig.pl -s hsa -g trb -t 6 -o test data/SRR941034_l100.fa
 
 Note: Because the genomic loci of TCRA and TCRD overlap, we use the same reference 
       sequence and VDJ annotations of the two genes when either gene is specified.
@@ -64,11 +64,4 @@ read.cdr3:
 (3) VJ combination and CDR3 sequences
 (4) sequence quality
 (5) protein sequence
----------------------------------------------------------------------------------------------------------
-
-
-4. Sample data
----------------------------------------------------------------------------------------------------------
-In the data folder, we put the two human TR sequence files and the one mouse IGH sequence file, and used 
-the files in the paper as sample data for users to test TRIg.
 ---------------------------------------------------------------------------------------------------------

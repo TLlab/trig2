@@ -340,11 +340,10 @@ chdir("..");
 
 
 sub Usage {
-    print "usage  : trig.pl [options] read.fq/a\n";
-    print "e.g.   : trig.pl -s hsa -g trb -o test read.fq\n\n";
+    print "usage  : trig.pl [options] R1.fq R2.fq\n";
+    print "e.g.   : trig.pl -s hsa -g trb -o test R1.fq R2.fq\n\n";
     print "option : -species  <str>    species name                 [hsa*, mmu] (*default)\n";
     print "         -gene     <str>    immune receptor gene         [tra, trb*, trd, trg, igh, igl, igk]\n";
-    print "                            can also be combined, e.g.,  [tra,trb]\n";
     print "         -outdir   <str>    output directory name        [output*]\n";
     print "         -minmatch <int>    minimal match of nucmer      [15*]\n";
     print "         -adjolq   <int>    adjust overlap Q             [0, 1*]\n";
