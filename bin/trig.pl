@@ -55,7 +55,7 @@ Usage(), exit 0 if $help;
 die "input file error!\n" if !-e $ARGV[0] || $ARGV[0] !~ /[qa]$/;
 
 # paired-end fastq
-my $peq = 1 if $ARGV[1] ? 1 : 0;
+my $peq = $ARGV[1] ? 1 : 0;
 if ($peq) {
     die "input file error!\n" if $ARGV[0] !~ /q$/ || !-e $ARGV[1] || $ARGV[1] !~ /q$/;
 }
