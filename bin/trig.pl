@@ -306,7 +306,18 @@ if ($peq) {
     `$command`;
     `rm um*_read.*.cdr3`;
     
-    `mv read.vdjdelta merged.vdjdelta`;
+	# unified field (same as unmerged)
+	open IN, "read.vdjdelta";
+	open OUT, ">merged.vdjdelta";
+	while(<IN>) {
+			my @F = split"\t";
+			print OUT join "\t", $F[0], 0, @F[1..$#F];
+	}
+	close IN;
+	close OUT;
+	unlink("read.vdjdelta");
+
+	#`mv read.vdjdelta merged.vdjdelta`;
     `mv read.cdr3 merged.cdr3`;
     if ($mergeq) {
         `cat merged.vdjdelta unmerged.vdjdelta > read.vdjdelta`;

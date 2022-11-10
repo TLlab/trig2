@@ -1129,7 +1129,7 @@ void DeltaFilter_t::printResult() {
 	if (rec_m.aligns.size() == 0)
 		return;
 
-	std::cout << rec_m.idQ << "\t" << 0 << "\t" << rec_m.lenQ;
+	std::cout << rec_m.idQ << "\t" << rec_m.lenQ;
 	std::cout << "\t" << reg_m << "\t" << rec_m.idR << "\t" << ori_m;
 	std::cout << "\t" << CombineVDJ_m;
 
@@ -1153,7 +1153,7 @@ void DeltaFilter_t::printResult(std::ofstream &cout) {
 	if (rec_m.aligns.size() == 0)
 		return;
 
-	cout << rec_m.idQ << "\t" << 0 << "\t" << rec_m.lenQ;
+	cout << rec_m.idQ << "\t" << rec_m.lenQ;
 	cout << "\t" << reg_m << "\t" << rec_m.idR << "\t" << ori_m;
 	cout << "\t" << CombineVDJ_m;
 

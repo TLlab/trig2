@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 # usage : TrigCoverageProfile.pl vdjdelta
+# update: considering ambiguous sequence in overlap region
 
 use strict;
 use File::Basename qw(dirname);
@@ -19,7 +20,6 @@ GetOptions(
 
 my $sg = "$s\_$g";
 my $dir = dirname(dirname(abs_path($0)));
-
 
 # load reference length
 
@@ -105,15 +105,16 @@ open IN, "<$ARGV[0]" || die "open $ARGV[0]: $!\n";
 while (<IN>) {
     my @a = split "\t"; chomp $a[-1];
     
-    next if @a == 3 || @a == 7;
+    next if @a == 4 || @a == 7;
 
-    if (@a == 9) {
-        SetCoverage($a[6]);
+    if (@a == 10) {
+        SetCoverage($a[7]);
     } elsif (@a == 13) {
         SetCoverage($a[7]);
     } elsif (@a == 19) {
-        SetCoverage($a[7]);
-        SetCoverage($a[16]);
+		#SetCoverage($a[7]);
+		#SetCoverage($a[16]);
+		SetCoverage_muti($a[7], $a[16]);
     }
 }
 close IN;
@@ -161,4 +162,48 @@ sub SetCoverage {
             $pi{$e+1} -= $n;
         }
     }
+}
+
+sub SetCoverage_muti {
+	my %cv;
+	foreach (@_) {
+		my @aln = split " ";
+		foreach my $aln (@aln) {
+			my @aa = split /\|/, $aln;
+			my $n = 1 / scalar(@aa);
+
+			foreach my $aa (@aa) {
+				my @b = split ":", $aa;
+				my ($s, $e) = $b[2] =~ /(\d+)-(\d+)/;
+				foreach my $i($s..$e) {
+
+					# choose the higher coverage in overlap region
+					if (exists $cv{$i}) {
+						$cv{$i} = $cv{$i} > $n ? $cv{$i} : $n ;
+					# not overlap region
+					} else {
+						$cv{$i} = $n;
+					}
+				}
+			}
+		}
+	}
+
+	# convert cv to pii
+	my %pii;
+	foreach (sort { $a <=> $b } keys %cv) {
+		if (exists $cv{$_-1}) {
+			$pii{$_} = $cv{$_} - $cv{$_-1} if $cv{$_} - $cv{$_-1} != 0;
+		# start pii
+		} else {
+			$pii{$_} = $cv{$_};
+		}
+		# end pii
+		if (!exists $cv{$_+1}) {
+			$pii{$_+1} = -$cv{$_};
+		}
+	}
+
+	# append %pii to %pi
+	$pi{$_} += $pii{$_} foreach keys %pii;
 }
