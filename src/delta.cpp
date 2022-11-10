@@ -14,7 +14,7 @@
 // IGK distal orientation issue to be solved
 std::map<char, int> GGO = { {'V', 0}, {'J', 1}, {'D', 2}, {'C', 3}, {'I', 4} };
 std::map<std::string, int> GEO = { {"V0", 0}, {"V1", 1}, {"V2", 2}, {"D0", 3}, {"J0", 4},
-				   {"C1", 5}, {"C2", 6}, {"C3", 7}, {"C4", 8}};
+	{"C1", 5}, {"C2", 6}, {"C3", 7}, {"C4", 8}};
 
 //====================================================VDJReader_t=====
 
@@ -28,7 +28,7 @@ void VDJReader_t::open(const std::string &vdj_path) {
 bool VDJReader_t::readNext() {
 	if (vdj_stream_m.peek() == EOF)
 		return false;
-	
+
 	// make way for the new vdj info
 	info_m.clear();
 
@@ -46,7 +46,7 @@ bool VDJReader_t::readNext() {
 	info.species = info.species_gene.substr(0, 3);
 	info.gene = info.species_gene.substr(4, 3);
 	std::transform(info.gene.begin(), info.gene.end(), info.gene.begin(), ::toupper);
-	
+
 	// flush the remaining whitespace
 	while(vdj_stream_m.get() != '\n');
 
@@ -115,224 +115,224 @@ std::string DeltaAlignment_t::concise_form() {
 }
 
 std::vector<std::string> DeltaAlignment_t::getEndAlignment(const int &n, bool rev) {
-        std::vector<std::string> aseg;
+	std::vector<std::string> aseg;
 
-        // starting loci
-        int ri = 0;
-        int qi = 0;
-        int gi = 0;
-        int gs = 0;
-        if (n < 0) {
-                int qs = this->alQ + n;
-                while (qi < qs) {
-                        int g = this->deltas[gi];
-                        int d = qs - qi;
-                        if (g > 0) {
-                                if (d < g-1) {
-                                        ri += d;
-                                        qi += d;
-                                        gs = d;
-                                } else {
-                                        ri += g;
-                                        qi += g-1;
-                                        gi += 1;
-                                }
-                        } else if (g == 0) {
-                                ri += d;
-                                qi += d;
-                                gs = d;
-                        } else {
-                                g = -g;
-                                if (d < g) {
-                                        ri += d;
-                                        qi += d;
-                                        gs = d;
-                                } else {
-                                        ri += g-1;
-                                        qi += g;
-                                        gi += 1;
-                                }
-                        }
-                }
-        }
+	// starting loci
+	int ri = 0;
+	int qi = 0;
+	int gi = 0;
+	int gs = 0;
+	if (n < 0) {
+		int qs = this->alQ + n;
+		while (qi < qs) {
+			int g = this->deltas[gi];
+			int d = qs - qi;
+			if (g > 0) {
+				if (d < g-1) {
+					ri += d;
+					qi += d;
+					gs = d;
+				} else {
+					ri += g;
+					qi += g-1;
+					gi += 1;
+				}
+			} else if (g == 0) {
+				ri += d;
+				qi += d;
+				gs = d;
+			} else {
+				g = -g;
+				if (d < g) {
+					ri += d;
+					qi += d;
+					gs = d;
+				} else {
+					ri += g-1;
+					qi += g;
+					gi += 1;
+				}
+			}
+		}
+	}
 
-        // get aligned segment on reference and query
-        std::string raseg;
-        std::string qaseg;
-        
-        // if no gap
-        if (this->deltas[gi] == 0) {
-                raseg = this->rseg.substr(ri, n);
-                qaseg = this->qseg.substr(qi, n);
-                if (rev == true) {
-                        raseg = FASTA_t::revcom(raseg);
-                        qaseg = FASTA_t::revcom(qaseg);
-                }
-                aseg.push_back(raseg);
-                aseg.push_back(qaseg);
-                return aseg;
-        }
+	// get aligned segment on reference and query
+	std::string raseg;
+	std::string qaseg;
 
-        // if there is a gap
-        int d = abs(n);   // distance to desired length
-        while (d > 0) {
-                int g = this->deltas[gi];
-                if (g > 0) {
-                        g -= gs;
-                        if (d < g) {
-                                raseg += this->rseg.substr(ri, d);
-                                qaseg += this->qseg.substr(qi, d);
-                                d = 0;
-                        } else {
-                                raseg += this->rseg.substr(ri, g);
-                                qaseg += this->qseg.substr(qi, g-1) + '_';
-                                d -= g-1;
-                                ri += g;
-                                qi += g-1;
-                                gi += 1;
-                                gs = 0;
-                        }
-                } else if (g == 0) {
-                        raseg += this->rseg.substr(ri, d);
-                        qaseg += this->qseg.substr(qi, d);
-                        d = 0;
-                } else {
-                        g = -g - gs;
-                        if (d < g) {
-                                raseg += this->rseg.substr(ri, d);
-                                qaseg += this->qseg.substr(qi, d);
-                                d = 0;
-                        } else {
-                                raseg += this->rseg.substr(ri, g-1) + '_';
-                                qaseg += this->qseg.substr(qi, g);
-                                d -= g;
-                                ri += g-1;
-                                qi += g;
-                                gi += 1;
-                                gs = 0;
-                        }
-                }
-        }
+	// if no gap
+	if (this->deltas[gi] == 0) {
+		raseg = this->rseg.substr(ri, n);
+		qaseg = this->qseg.substr(qi, n);
+		if (rev == true) {
+			raseg = FASTA_t::revcom(raseg);
+			qaseg = FASTA_t::revcom(qaseg);
+		}
+		aseg.push_back(raseg);
+		aseg.push_back(qaseg);
+		return aseg;
+	}
 
-        if (rev == true) {
-                raseg = FASTA_t::revcom(raseg);
-                qaseg = FASTA_t::revcom(qaseg);
-        }
-        aseg.push_back(raseg);
-        aseg.push_back(qaseg);
-        return aseg;
+	// if there is a gap
+	int d = abs(n);   // distance to desired length
+	while (d > 0) {
+		int g = this->deltas[gi];
+		if (g > 0) {
+			g -= gs;
+			if (d < g) {
+				raseg += this->rseg.substr(ri, d);
+				qaseg += this->qseg.substr(qi, d);
+				d = 0;
+			} else {
+				raseg += this->rseg.substr(ri, g);
+				qaseg += this->qseg.substr(qi, g-1) + '_';
+				d -= g-1;
+				ri += g;
+				qi += g-1;
+				gi += 1;
+				gs = 0;
+			}
+		} else if (g == 0) {
+			raseg += this->rseg.substr(ri, d);
+			qaseg += this->qseg.substr(qi, d);
+			d = 0;
+		} else {
+			g = -g - gs;
+			if (d < g) {
+				raseg += this->rseg.substr(ri, d);
+				qaseg += this->qseg.substr(qi, d);
+				d = 0;
+			} else {
+				raseg += this->rseg.substr(ri, g-1) + '_';
+				qaseg += this->qseg.substr(qi, g);
+				d -= g;
+				ri += g-1;
+				qi += g;
+				gi += 1;
+				gs = 0;
+			}
+		}
+	}
+
+	if (rev == true) {
+		raseg = FASTA_t::revcom(raseg);
+		qaseg = FASTA_t::revcom(qaseg);
+	}
+	aseg.push_back(raseg);
+	aseg.push_back(qaseg);
+	return aseg;
 }
 
 void DeltaAlignment_t::cutEndAlignment(const int &n) {
-        if (n == 0)
-                return;
-        
-        // get end alignment, count mismatch and gap, and update
-        int cutoffmmgp = 0;
-        std::vector<std::string> cutoffseq = getEndAlignment(n, false);
-        for (size_t i = 0; i < cutoffseq[0].size(); i++) {
-                if ( (char)std::toupper(cutoffseq[0][i]) != (char)cutoffseq[1][i] ) cutoffmmgp++;
-        }
-        this->mmgp -= cutoffmmgp;
+	if (n == 0)
+		return;
 
-        // move to the desired cut point
-        int d = n > 0 ? n : this->alQ + n;   // distance to the desired cut point
-        int ri = 0;
-        int qi = 0;
-        int gi = 0;
-        int gs = 0;
-        std::vector<int> newdeltas;
+	// get end alignment, count mismatch and gap, and update
+	int cutoffmmgp = 0;
+	std::vector<std::string> cutoffseq = getEndAlignment(n, false);
+	for (size_t i = 0; i < cutoffseq[0].size(); i++) {
+		if ( (char)std::toupper(cutoffseq[0][i]) != (char)cutoffseq[1][i] ) cutoffmmgp++;
+	}
+	this->mmgp -= cutoffmmgp;
 
-        while (d > 0) {
-                int g = this->deltas[gi];
-                if (g > 0) {
-                        if (d < g-1) {
-                                ri += d;
-                                qi += d;
-                                gs = d;
-                                d = 0;
-                        } else {
-                                ri += g;
-                                qi += g-1;
-                                gi += 1;
-                                newdeltas.push_back(g);
-                                d -= g-1;
-                        }
-                } else if (g == 0) {
-                        ri += d;
-                        qi += d;
-                        d = 0;
-                } else {
-                        g = -g;
-                        if (d < g) {
-                                ri += d;
-                                qi += d;
-                                gs = d;
-                                d = 0;
-                        } else {
-                                ri += g-1;
-                                qi += g;
-                                gi += 1;
-                                newdeltas.push_back(-g);
-                                d -= g;
-                        }
-                }
-        }
+	// move to the desired cut point
+	int d = n > 0 ? n : this->alQ + n;   // distance to the desired cut point
+	int ri = 0;
+	int qi = 0;
+	int gi = 0;
+	int gs = 0;
+	std::vector<int> newdeltas;
 
-        // cut from head
-        if (n > 0) {
-                this->sR   += ri;
-                this->alQ  -= n;
-                this->rseg  = this->rseg.substr(ri);
-                this->qseg  = this->qseg.substr(qi);
-                if (this->deltas[gi] == 0) {
-                        newdeltas = {0};
-                } else {
-                        newdeltas = {};
-                        int g = this->deltas[gi];
-                        g = g > 0 ? g - gs : g + gs;
-                        newdeltas.push_back(g);
-                        for (int i = gi+1; i < this->deltas.size(); i++) {
-                                newdeltas.push_back(this->deltas[i]);
-                        }
-                }
-                this->deltas = newdeltas;
-                if (this->ro == '+') {
-                        this->sQ  += qi;
-                        this->osQ += qi;
-                } else {
-                        this->sQ  -= qi;
-                        this->oeQ -= qi;
-                }
-                
-        // cut from tail
-        } else {
-                int rl = (this->eR - this->sR + 1) - ri;
-                int ql = this->alQ - qi;
-                this->eR   -= rl;
-                this->alQ  += n;
-                this->rseg  = this->rseg.substr(0, ri);
-                this->qseg  = this->qseg.substr(0, qi);
-                newdeltas.push_back(0);
-                this->deltas = newdeltas;
-                if (this->ro == '+') {
-                        this->eQ  -= ql;
-                        this->oeQ -= ql;
-                } else {
-                        this->eQ  += ql;
-                        this->osQ += ql;
-                }
-        }
+	while (d > 0) {
+		int g = this->deltas[gi];
+		if (g > 0) {
+			if (d < g-1) {
+				ri += d;
+				qi += d;
+				gs = d;
+				d = 0;
+			} else {
+				ri += g;
+				qi += g-1;
+				gi += 1;
+				newdeltas.push_back(g);
+				d -= g-1;
+			}
+		} else if (g == 0) {
+			ri += d;
+			qi += d;
+			d = 0;
+		} else {
+			g = -g;
+			if (d < g) {
+				ri += d;
+				qi += d;
+				gs = d;
+				d = 0;
+			} else {
+				ri += g-1;
+				qi += g;
+				gi += 1;
+				newdeltas.push_back(-g);
+				d -= g;
+			}
+		}
+	}
 
-        // Note that simc, stpc, gcQ, sc, and id are not modified.
-        // But these will not be used afterward.
+	// cut from head
+	if (n > 0) {
+		this->sR   += ri;
+		this->alQ  -= n;
+		this->rseg  = this->rseg.substr(ri);
+		this->qseg  = this->qseg.substr(qi);
+		if (this->deltas[gi] == 0) {
+			newdeltas = {0};
+		} else {
+			newdeltas = {};
+			int g = this->deltas[gi];
+			g = g > 0 ? g - gs : g + gs;
+			newdeltas.push_back(g);
+			for (int i = gi+1; i < this->deltas.size(); i++) {
+				newdeltas.push_back(this->deltas[i]);
+			}
+		}
+		this->deltas = newdeltas;
+		if (this->ro == '+') {
+			this->sQ  += qi;
+			this->osQ += qi;
+		} else {
+			this->sQ  -= qi;
+			this->oeQ -= qi;
+		}
+
+		// cut from tail
+	} else {
+		int rl = (this->eR - this->sR + 1) - ri;
+		int ql = this->alQ - qi;
+		this->eR   -= rl;
+		this->alQ  += n;
+		this->rseg  = this->rseg.substr(0, ri);
+		this->qseg  = this->qseg.substr(0, qi);
+		newdeltas.push_back(0);
+		this->deltas = newdeltas;
+		if (this->ro == '+') {
+			this->eQ  -= ql;
+			this->oeQ -= ql;
+		} else {
+			this->eQ  += ql;
+			this->osQ += ql;
+		}
+	}
+
+	// Note that simc, stpc, gcQ, sc, and id are not modified.
+	// But these will not be used afterward.
 }
 
 //====================================================DeltaReader_t===
 
 void DeltaReader_t::open(const std::string &delta_path) {
 	delta_path_m = delta_path;
-	
+
 	// open delta file
 	delta_stream_m.open(delta_path_m);
 	CheckStream();
@@ -349,7 +349,7 @@ void DeltaReader_t::open(const std::string &delta_path) {
 }
 
 bool DeltaReader_t::readNextRecord(const bool read_deltas) {
-	
+
 	// EOF or or any other abnormality
 	if(delta_stream_m.peek() != '>')
 		return false;
@@ -396,8 +396,8 @@ void DeltaReader_t::readNextAlignment(DeltaAlignment_t &align, const bool read_d
 	delta_stream_m >> align.stpc;
 
 	align.ro = align.sQ < align.eQ ? '+' : '-';
-        align.go = align.ro;
-        align.osQ = align.sQ < align.eQ ? align.sQ : align.eQ;
+	align.go = align.ro;
+	align.osQ = align.sQ < align.eQ ? align.sQ : align.eQ;
 	align.oeQ = align.sQ < align.eQ ? align.eQ : align.sQ;
 	align.alQ = align.oeQ - align.osQ + 1;
 
@@ -517,18 +517,18 @@ void DeltaFilter_t::annotateVDJ() {
 		i->vdj = annot;
 		i->vdje = annot_exon;
 		i->ge = std::string(1, annot[3]) + annot_exon[annot_exon.length()-1];
-                if (annot == "TRBV30") {
-                        i->go = i->ro == '+' ? '-' : '+';
-                }
+		if (annot == "TRBV30") {
+			i->go = i->ro == '+' ? '-' : '+';
+		}
 	}
 }
 
 void DeltaFilter_t::groupAlignment() {
 	std::vector<DeltaAlignment_t> galn;
 
-        // sort along the query
-        std::sort(rec_m.aligns.begin(), rec_m.aligns.end(),
-		  [](DeltaAlignment_t a, DeltaAlignment_t b){ return a.osQ < b.osQ; });
+	// sort along the query
+	std::sort(rec_m.aligns.begin(), rec_m.aligns.end(),
+			[](DeltaAlignment_t a, DeltaAlignment_t b){ return a.osQ < b.osQ; });
 
 	// filter short (<30 bp) intergenic alignment
 	for (int i = 0; i < rec_m.aligns.size(); i++) {
@@ -537,7 +537,7 @@ void DeltaFilter_t::groupAlignment() {
 			i--;
 		}
 	}
-	
+
 	while(!rec_m.aligns.empty()) {
 
 		// initialize grouped alignment
@@ -553,7 +553,7 @@ void DeltaFilter_t::groupAlignment() {
 		// find representative alignment of a group
 		if (ga.size() > 1) {
 			std::sort(ga.begin(), ga.end(),
-				  [](DeltaAlignment_t a, DeltaAlignment_t b){ return GGO[a.vdj[3]] < GGO[b.vdj[3]]; });
+					[](DeltaAlignment_t a, DeltaAlignment_t b){ return GGO[a.vdj[3]] < GGO[b.vdj[3]]; });
 		}
 		DeltaAlignment_t ra = ga[0];
 		ra.gm.assign(ga.begin()+1, ga.end());
@@ -572,7 +572,7 @@ void DeltaFilter_t::filterAlignment() {
 	// count alignments of each V, D, or J
 	std::map<std::string, int> VDJ_c;
 	for (auto ra : rec_m.aligns) {
-                VDJ_c[ra.vdj]++;
+		VDJ_c[ra.vdj]++;
 		for (auto m : ra.gm)
 			VDJ_c[m.vdj]++;
 	}
@@ -584,67 +584,67 @@ void DeltaFilter_t::filterAlignment() {
 		if (i->gm.size() == 0)
 			continue;
 
-                // if V or C ambiguity
-                if (i->vdj[3] == 'V' || i->vdj[3] == 'C') {
+		// if V or C ambiguity
+		if (i->vdj[3] == 'V' || i->vdj[3] == 'C') {
 
-                        // keep only V or C alignments in the group
-                        std::vector<DeltaAlignment_t> va = {*i};
-                        for (auto m : i->gm) {
-                                if (m.vdj[3] == 'V' || m.vdj[3] == 'C') 
-                                        va.push_back(m);
-                        }
-                        if (va.size() == 1) {
-                                *i = va[0];
-                                i->gm.assign(va.begin()+1, va.end());
-                                continue;
-                        }
+			// keep only V or C alignments in the group
+			std::vector<DeltaAlignment_t> va = {*i};
+			for (auto m : i->gm) {
+				if (m.vdj[3] == 'V' || m.vdj[3] == 'C') 
+					va.push_back(m);
+			}
+			if (va.size() == 1) {
+				*i = va[0];
+				i->gm.assign(va.begin()+1, va.end());
+				continue;
+			}
 
-                        // find V or C alignment with more counts
-                        int maxn = 0;
-                        for (auto m : va) {
-                                if (VDJ_c[m.vdj] > maxn)
-                                        maxn = VDJ_c[m.vdj];
-                        }
-                        std::vector<DeltaAlignment_t> tva = {};
-                        for (auto a : va) {
-                                if (VDJ_c[a.vdj] == maxn) 
-                                        tva.push_back(a);
-                        }
-                        
-                        // reset the grouped alignment if the ambiguity can be resolved
-                        if (tva.size() > 0 && tva.size() < i->gm.size()+1) {
-                                *i = tva[0];
-                                i->gm.assign(tva.begin()+1, tva.end());
-                        }
+			// find V or C alignment with more counts
+			int maxn = 0;
+			for (auto m : va) {
+				if (VDJ_c[m.vdj] > maxn)
+					maxn = VDJ_c[m.vdj];
+			}
+			std::vector<DeltaAlignment_t> tva = {};
+			for (auto a : va) {
+				if (VDJ_c[a.vdj] == maxn) 
+					tva.push_back(a);
+			}
 
-                } else if ((i->vdj[2] == 'B' || i->vdj[2] == 'G') && i->vdj[3] == 'C') {   // if TRB/G C ambiguity   
+			// reset the grouped alignment if the ambiguity can be resolved
+			if (tva.size() > 0 && tva.size() < i->gm.size()+1) {
+				*i = tva[0];
+				i->gm.assign(tva.begin()+1, tva.end());
+			}
 
-                        // filter the C1 if J2-C1|C2
-                        std::vector<DeltaAlignment_t> tca = {};
-                        if ((i->ro == '+' && i > rec_m.aligns.begin() && (i-1)->vdj[3] == 'J' && (i-1)->vdj[4] == '2') ||
-                            (i->ro == '-' && i < rec_m.aligns.end()-1 && (i+1)->vdj[3] == 'J' && (i+1)->vdj[4] == '2')) {
-                                if (i->vdj[4] == '2')
-                                        tca.push_back(*i);
-                                for (auto a : i->gm) {
-                                        if (a.vdj[4] == '2') 
-                                                tca.push_back(a);
-                                }
-                        }
-                        if (tca.size() == 1) {
-                                *i = tca[0];
-                                i->gm.assign(tca.begin()+1, tca.end());
-                        }
-                        
-                } else if (i->vdj[2] == 'L' && i->vdj[3] == 'C') {   // if IGL C ambiguity
-                        // 12367
-                }
-        }
-        
+		} else if ((i->vdj[2] == 'B' || i->vdj[2] == 'G') && i->vdj[3] == 'C') {   // if TRB/G C ambiguity   
+
+			// filter the C1 if J2-C1|C2
+			std::vector<DeltaAlignment_t> tca = {};
+			if ((i->ro == '+' && i > rec_m.aligns.begin() && (i-1)->vdj[3] == 'J' && (i-1)->vdj[4] == '2') ||
+					(i->ro == '-' && i < rec_m.aligns.end()-1 && (i+1)->vdj[3] == 'J' && (i+1)->vdj[4] == '2')) {
+				if (i->vdj[4] == '2')
+					tca.push_back(*i);
+				for (auto a : i->gm) {
+					if (a.vdj[4] == '2') 
+						tca.push_back(a);
+				}
+			}
+			if (tca.size() == 1) {
+				*i = tca[0];
+				i->gm.assign(tca.begin()+1, tca.end());
+			}
+
+		} else if (i->vdj[2] == 'L' && i->vdj[3] == 'C') {   // if IGL C ambiguity
+			// 12367
+		}
+	}
+
 	// filter alignment of potential CDR3 segment
 	int pcdr3i = -1;
 	for (auto i = rec_m.aligns.begin()+1; i < rec_m.aligns.end()-1; i++) {
-		
-        // skip if the alignment is good
+
+		// skip if the alignment is good
 		if (i->ge == "D0")
 			continue;
 		if (i->alQ >= 60)
@@ -653,155 +653,125 @@ void DeltaFilter_t::filterAlignment() {
 			continue;
 
 		// if flanked by V2 and J0 and not broken V or J
-                if ( ((i-1)->ge == "V2" && (i+1)->ge == "J0" &&
-                      i->vdje != (i-1)->vdje && i->vdje != (i+1)->vdje) ||
-                     ((i-1)->ge == "J0" && (i+1)->ge == "V2" &&
-                      i->vdje != (i+1)->vdje && i->vdje != (i-1)->vdje) ) { 
-                        pcdr3i = i - rec_m.aligns.begin();
-                }
+		if ( ((i-1)->ge == "V2" && (i+1)->ge == "J0" &&
+					i->vdje != (i-1)->vdje && i->vdje != (i+1)->vdje) ||
+				((i-1)->ge == "J0" && (i+1)->ge == "V2" &&
+				 i->vdje != (i+1)->vdje && i->vdje != (i-1)->vdje) ) { 
+			pcdr3i = i - rec_m.aligns.begin();
+		}
 	}
 
 	// reset alignment if a potential CDR3 is found
 	if (pcdr3i != -1) {
-                rec_m.aligns.erase(rec_m.aligns.begin() + pcdr3i);
+		rec_m.aligns.erase(rec_m.aligns.begin() + pcdr3i);
 	}
 }
 
 int DeltaFilter_t::maxScorePosition(std::vector<std::string> &adjseq1, std::vector<std::string> &adjseq2,
-                                     std::string &rfk1, std::string &rfk2) {
-        std::vector<int> sps1;
-        std::vector<int> sps2;
-        bool spq = (rfk1.size() == 2 && rfk2.size() == 2);
-        if (spq) {
-                // get splicing bonus 1
-                std::string rseg1 = adjseq1[0] + rfk1;
-                std::transform(rseg1.begin(), rseg1.end(), rseg1.begin(), ::toupper);
-                for (size_t i = 0; i < rseg1.size()-1; i++) {
-                        if (rseg1[i] == 'G' && rseg1[i+1] == 'T') {
-                                sps1.push_back(SPC);
-                        } else {
-                                sps1.push_back(0);
-                        }
-                }
-                // get splicing bonus 2
-                std::string rseg2 = rfk2 + adjseq2[0];
-                std::transform(rseg2.begin(), rseg2.end(), rseg2.begin(), ::toupper);
-                for (size_t i = 2; i < rseg2.size()+1; i++) {
-                        if (rseg2[i-2] == 'A' && rseg2[i-1] == 'G') {
-                                sps2.push_back(SPC);
-                        } else {
-                                sps2.push_back(0);
-                        }
-                }
-        }
+		std::string &rfk1, std::string &rfk2) {
+	std::vector<int> sps1;
+	std::vector<int> sps2;
+	bool spq = (rfk1.size() == 2 && rfk2.size() == 2);
+	if (spq) {
+		// get splicing bonus 1
+		std::string rseg1 = adjseq1[0] + rfk1;
+		std::transform(rseg1.begin(), rseg1.end(), rseg1.begin(), ::toupper);
+		for (size_t i = 0; i < rseg1.size()-1; i++) {
+			if (rseg1[i] == 'G' && rseg1[i+1] == 'T') {
+				sps1.push_back(SPC);
+			} else {
+				sps1.push_back(0);
+			}
+		}
+		// get splicing bonus 2
+		std::string rseg2 = rfk2 + adjseq2[0];
+		std::transform(rseg2.begin(), rseg2.end(), rseg2.begin(), ::toupper);
+		for (size_t i = 2; i < rseg2.size()+1; i++) {
+			if (rseg2[i-2] == 'A' && rseg2[i-1] == 'G') {
+				sps2.push_back(SPC);
+			} else {
+				sps2.push_back(0);
+			}
+		}
+	}
 
-        /*
-        std::cout << "sps1:";
-        for (int i: sps1) {
-                std::cout << i << " ";
-        }
-        std::cout << std::endl;
-        std::cout << "sps2:";
-        for (int i: sps2) {
-                std::cout << i << " ";
-        }
-        std::cout << std::endl;
-        */
-        
-        // calculate score of alignment 1
-        std::vector<int> qps1;
-        int cs1 = 0;
-        int ri1 = -1;
-        if (spq) {
-                qps1.push_back(sps1[ri1+1]);
-        } else {
-                qps1.push_back(0);
-        }
-        for (size_t i = 0; i < adjseq1[0].size(); i++) {
-                if (adjseq1[0][i] != '_')
-                        ri1 += 1;
-                if (adjseq1[1][i] != '_') {
-                        if (adjseq1[0][i] != '_') {
-                                if (adjseq1[0][i] == adjseq1[1][i]) {
-                                        cs1 += MSC + EXB;
-                                } else if (adjseq1[0][i]-32 == adjseq1[1][i]) {
-                                        cs1 += MSC;
-                                } else {
-                                        cs1 += MMSC;
-                                }
-                        } else {
-                                cs1 += GSC;
-                        }
-                        if (spq) {
-                                qps1.push_back(cs1 + sps1[ri1+1]);
-                        } else {
-                                qps1.push_back(cs1);
-                        }
-                } else {
-                        cs1 += GSC;
-                }
-        }
+	// calculate score of alignment 1
+	std::vector<int> qps1;
+	int cs1 = 0;
+	int ri1 = -1;
+	if (spq) {
+		qps1.push_back(sps1[ri1+1]);
+	} else {
+		qps1.push_back(0);
+	}
+	for (size_t i = 0; i < adjseq1[0].size(); i++) {
+		if (adjseq1[0][i] != '_')
+			ri1 += 1;
+		if (adjseq1[1][i] != '_') {
+			if (adjseq1[0][i] != '_') {
+				if (adjseq1[0][i] == adjseq1[1][i]) {
+					cs1 += MSC + EXB;
+				} else if (adjseq1[0][i]-32 == adjseq1[1][i]) {
+					cs1 += MSC;
+				} else {
+					cs1 += MMSC;
+				}
+			} else {
+				cs1 += GSC;
+			}
+			if (spq) {
+				qps1.push_back(cs1 + sps1[ri1+1]);
+			} else {
+				qps1.push_back(cs1);
+			}
+		} else {
+			cs1 += GSC;
+		}
+	}
 
-        // calculate score of alignment 2
-        std::vector<int> qps2;
-        int cs2 = 0;
-        int ri2 = -1;
-        if (spq) {
-                qps2.push_back(-sps2[ri2+1]);
-        } else {
-                qps2.push_back(0);
-        }
-        for (size_t i = 0; i < adjseq2[0].size(); i++) {
-                if (adjseq2[0][i] != '_')
-                        ri2 += 1;
-                if (adjseq2[1][i] != '_') {
-                        if (adjseq2[0][i] != '_') {
-                                if (adjseq2[0][i] == adjseq2[1][i]) {
-                                        cs2 += MSC + EXB;
-                                } else if (adjseq2[0][i]-32 == adjseq2[1][i]) {
-                                        cs2 += MSC;
-                                } else {
-                                        cs2 += MMSC;
-                                }
-                        } else {
-                                cs2 += GSC;
-                        }
-                        if (spq) {
-                                qps2.push_back(cs2 - sps2[ri2+1]);
-                        } else {
-                                qps2.push_back(cs2);
-                        }
-                } else {
-                        cs2 += GSC;
-                }
-        }
+	// calculate score of alignment 2
+	std::vector<int> qps2;
+	int cs2 = 0;
+	int ri2 = -1;
+	if (spq) {
+		qps2.push_back(-sps2[ri2+1]);
+	} else {
+		qps2.push_back(0);
+	}
+	for (size_t i = 0; i < adjseq2[0].size(); i++) {
+		if (adjseq2[0][i] != '_')
+			ri2 += 1;
+		if (adjseq2[1][i] != '_') {
+			if (adjseq2[0][i] != '_') {
+				if (adjseq2[0][i] == adjseq2[1][i]) {
+					cs2 += MSC + EXB;
+				} else if (adjseq2[0][i]-32 == adjseq2[1][i]) {
+					cs2 += MSC;
+				} else {
+					cs2 += MMSC;
+				}
+			} else {
+				cs2 += GSC;
+			}
+			if (spq) {
+				qps2.push_back(cs2 - sps2[ri2+1]);
+			} else {
+				qps2.push_back(cs2);
+			}
+		} else {
+			cs2 += GSC;
+		}
+	}
 
-        // combine two scores
-        std::vector<int> qps;
-        for (size_t i = 0; i < qps1.size(); i++) {
-                qps.push_back(qps1[i] - qps2[i]);
-        }
+	// combine two scores
+	std::vector<int> qps;
+	for (size_t i = 0; i < qps1.size(); i++) {
+		qps.push_back(qps1[i] - qps2[i]);
+	}
 
-        /*
-        std::cout << "qps1:";
-        for (int i: qps1) {
-                std::cout << i << " ";
-        }
-        std::cout << std::endl;
-        std::cout << "qps2:";
-        for (int i: qps2) {
-                std::cout << i << " ";
-        }
-        std::cout << std::endl;
-        std::cout << "qps:";
-        for (int i: qps) {
-                std::cout << i << " ";
-        }
-        std::cout << std::endl;
-        */
-        
-        // find the max score, if same score choose the left one
-        return std::distance(qps.begin(), std::max_element(qps.begin(), qps.end()));
+
+	// find the max score, if same score choose the left one
+	return std::distance(qps.begin(), std::max_element(qps.begin(), qps.end()));
 }
 
 void DeltaFilter_t::adjustOverlap() {
@@ -809,17 +779,13 @@ void DeltaFilter_t::adjustOverlap() {
 	// if no alignment remains
 	if (rec_m.aligns.size() == 0)
 		return;
-	
-	// sort by orientated query coordinate
-	//std::sort(rec_m.aligns.begin(), rec_m.aligns.end(),
-        //          [](DeltaAlignment_t a, DeltaAlignment_t b){ return a.osQ < b.osQ; });
-	
+
 	// update vi di ji
 	//update_VDJ_index();
 
 	// check overlap for each pair of neighboring alignments
 	for (auto i = rec_m.aligns.begin()+1; i < rec_m.aligns.end(); i++) {
-		
+
 		// skip if more than one group member
 		if ((i-1)->gm.size() > 0 || i->gm.size() > 0)
 			continue;
@@ -827,113 +793,79 @@ void DeltaFilter_t::adjustOverlap() {
 		// skip if no overlap
 		int ol = (i-1)->oeQ - i->osQ +1;
 		if (ol <= 0)
-                        continue;
+			continue;
 
-                // label (i-1) to be removed if it is enclosed in i after being cut
-                if (((i-1)->osQ + (i-1)->oeQ) >= 2 * i->osQ) {
-                        (i-1)->tbf = true;
-                        continue;
-                }
+		// label (i-1) to be removed if it is enclosed in i after being cut
+		if (((i-1)->osQ + (i-1)->oeQ) >= 2 * i->osQ) {
+			(i-1)->tbf = true;
+			continue;
+		}
 
 		// skip if the aligned segment is at the beginning of the reference 
 		if ((i-1)->sR == 1 || i->sR == 1)
-                        continue;
-		
-                // load reference and query segments
-                if ((i-1)->rseg.length()==0) {
-                        (i-1)->rseg = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->sR, (i-1)->eR);
-                        (i-1)->rlfk = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->sR-2, (i-1)->sR-1);
-                        (i-1)->rrfk = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->eR+1, (i-1)->eR+2);
-                        (i-1)->qseg = FASTA_t::subseq(qryseq_m, (i-1)->osQ, (i-1)->oeQ);
-                        if ((i-1)->ro == '-')
-                                (i-1)->qseg = FASTA_t::revcom((i-1)->qseg);
-                }
-                i->rseg = FASTA_t::subseq(refseq_m[rec_m.idR], i->sR, i->eR);
-                i->rlfk = FASTA_t::subseq(refseq_m[rec_m.idR], i->sR-2, i->sR-1);
-                i->rrfk = FASTA_t::subseq(refseq_m[rec_m.idR], i->eR+1, i->eR+2);
-                i->qseg = FASTA_t::subseq(qryseq_m, i->osQ, i->oeQ);
-                if (i->ro == '-')
-                        i->qseg = FASTA_t::revcom(i->qseg);
+			continue;
 
-		// check adjustment of overlapping alignments
-                /*
-		std::cout << "***before_adj*****\n";
-		std::cout << (i-1)->osQ << "-" << (i-1)->oeQ << " "
-			  << i->osQ << "-" << i->oeQ << std::endl;
-		std::cout << (i-1)->sQ << "-" << (i-1)->eQ << " "
-			  << i->sQ << "-" << i->eQ << std::endl;
-		std::cout << (i-1)->sR << "-" << (i-1)->eR << " "
-			  << i->sR << "-" << i->eR << std::endl << std::endl;
-		for (int d : i->deltas) {
-			std::cout << d << " " << std::endl;
+		// load reference and query segments
+		if ((i-1)->rseg.length()==0) {
+			(i-1)->rseg = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->sR, (i-1)->eR);
+			(i-1)->rlfk = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->sR-2, (i-1)->sR-1);
+			(i-1)->rrfk = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->eR+1, (i-1)->eR+2);
+			(i-1)->qseg = FASTA_t::subseq(qryseq_m, (i-1)->osQ, (i-1)->oeQ);
+			if ((i-1)->ro == '-')
+				(i-1)->qseg = FASTA_t::revcom((i-1)->qseg);
 		}
-		std::cout << "*****************" << std::endl;
-                */
+		i->rseg = FASTA_t::subseq(refseq_m[rec_m.idR], i->sR, i->eR);
+		i->rlfk = FASTA_t::subseq(refseq_m[rec_m.idR], i->sR-2, i->sR-1);
+		i->rrfk = FASTA_t::subseq(refseq_m[rec_m.idR], i->eR+1, i->eR+2);
+		i->qseg = FASTA_t::subseq(qryseq_m, i->osQ, i->oeQ);
+		if (i->ro == '-')
+			i->qseg = FASTA_t::revcom(i->qseg);
 
-                // get aligned segments
-                std::vector<std::string> adjseq1;
+
+		// get aligned segments
+		std::vector<std::string> adjseq1;
 		std::vector<std::string> adjseq2;
 
-                // along reference
-                if ((i-1)->ro == i->ro) {
-                        if (i->ro == '+') {
-                                adjseq1 = (i-1)->getEndAlignment(-ol, false);
-                                adjseq2 = i->getEndAlignment(ol, false);
-                        } else {
-                                adjseq1 = i->getEndAlignment(-ol, false);
-                                adjseq2 = (i-1)->getEndAlignment(ol, false);
-                        }
-                        
-                        int max_pos = maxScorePosition(adjseq1, adjseq2, (i-1)->rrfk, i->rlfk);
-                        int n1 = -(ol-max_pos);
-                        int n2 = max_pos;
+		// along reference
+		if ((i-1)->ro == i->ro) {
+			if (i->ro == '+') {
+				adjseq1 = (i-1)->getEndAlignment(-ol, false);
+				adjseq2 = i->getEndAlignment(ol, false);
+			} else {
+				adjseq1 = i->getEndAlignment(-ol, false);
+				adjseq2 = (i-1)->getEndAlignment(ol, false);
+			}
 
-                        if (i->ro == '+') {
-                                (i-1)->cutEndAlignment(n1);
-                                i->cutEndAlignment(n2);
-                        } else {
-                                i->cutEndAlignment(n1);
-                                (i-1)->cutEndAlignment(n2);
-                        }
-                        
-                // along query
-                } else {
-                        adjseq1 = (i-1)->ro == '+' ? (i-1)->getEndAlignment(-ol, false) :
-                                (i-1)->getEndAlignment(ol, true);
-                        adjseq2 = i->ro == '+' ? i->getEndAlignment(ol, false) :
-                                i->getEndAlignment(-ol, true);
+			int max_pos = maxScorePosition(adjseq1, adjseq2, (i-1)->rrfk, i->rlfk);
+			int n1 = -(ol-max_pos);
+			int n2 = max_pos;
 
-                        std::string rfk1 = "";
-                        std::string rfk2 = "";
-                        int max_pos = maxScorePosition(adjseq1, adjseq2, rfk1, rfk2);
+			if (i->ro == '+') {
+				(i-1)->cutEndAlignment(n1);
+				i->cutEndAlignment(n2);
+			} else {
+				i->cutEndAlignment(n1);
+				(i-1)->cutEndAlignment(n2);
+			}
 
-                        int n1 = (i-1)->ro == '+' ? -(ol-max_pos) : (ol-max_pos);
-                        (i-1)->cutEndAlignment(n1);
-                        int n2 = i->ro == '+' ? max_pos : -max_pos;
-                        i->cutEndAlignment(n2);
-                }
+			// along query
+		} else {
+			adjseq1 = (i-1)->ro == '+' ? (i-1)->getEndAlignment(-ol, false) :
+				(i-1)->getEndAlignment(ol, true);
+			adjseq2 = i->ro == '+' ? i->getEndAlignment(ol, false) :
+				i->getEndAlignment(-ol, true);
 
-                /*
-		std::cout << "------\n";
-		std::cout << adjseq1[0] << std::endl;
-		std::cout << adjseq1[1] << std::endl;
-		std::cout << adjseq2[0] << std::endl;
-		std::cout << adjseq2[1] << std::endl;
-		std::cout << "------\n";
+			std::string rfk1 = "";
+			std::string rfk2 = "";
+			int max_pos = maxScorePosition(adjseq1, adjseq2, rfk1, rfk2);
 
-		std::cout << "after adjust: " << std::endl;
-		std::cout << (i-1)->osQ << "-" << (i-1)->oeQ << " " << (i-1)->alQ << " "
-			  << i->osQ << "-" << i->oeQ << " " << i->alQ << std::endl;
-		std::cout << (i-1)->sQ << "-" << (i-1)->eQ << " "
-			  << i->sQ << "-" << i->eQ << std::endl;
-		std::cout << (i-1)->sR << "-" << (i-1)->eR << " "
-			  << i->sR << "-" << i->eR << std::endl << std::endl;
-                for (int d : i->deltas) {
-			std::cout << d << " ";
+			int n1 = (i-1)->ro == '+' ? -(ol-max_pos) : (ol-max_pos);
+			(i-1)->cutEndAlignment(n1);
+			int n2 = i->ro == '+' ? max_pos : -max_pos;
+			i->cutEndAlignment(n2);
 		}
-		std::cout << std::endl;
-                */
-        }
+
+	}
 
 	// filter short intergenic alignment again after adjusting overlap
 	for (int i = 0; i < rec_m.aligns.size(); i++) {
@@ -943,13 +875,6 @@ void DeltaFilter_t::adjustOverlap() {
 		}
 	}
 
-        // sort by the overall orientation
-        /*
-        if (ori_m == '-') {
-		std::reverse(rec_m.aligns.begin(), rec_m.aligns.end());
-                update_VDJ_index();
-	}
-        */
 }
 
 void DeltaFilter_t::setRecombCode() {
@@ -959,56 +884,56 @@ void DeltaFilter_t::setRecombCode() {
 		return;
 
 	// set recombination code
-        int cn = 0;    // number of C segments
-        std::unordered_map<char, int> oc = { {'+', 0}, {'-', 0} };
-        
-	for (int i = 0; i < rec_m.aligns.size(); i++) {
-                if (rec_m.aligns[i].vdj[3] == 'C')
-                        cn++;
-                if (rec_m.aligns[i].vdj != "TRBV30") {
-                        oc[rec_m.aligns[i].ro] += 1;
-                } else {
-                        char o = rec_m.aligns[i].ro == '+' ? '-' : '+';
-                        oc[o] += 1;
-                }
-        }
-        int soq = 1;   // same orientation Q
-        if (oc['+'] > 0 && oc['-'] > 0)
-                soq = 0;
-        
-        // set recombination code
-        rc_m = "NCH";
-        if (cn > 1 || soq == 0) {
-                rc_m = "CH";
-                
-        } else {   
-                int siq = 1;   // check increasing Q
-                
-                // remove V30 from the alignment
-                std::vector<DeltaAlignment_t> nov30aln;
-                for (auto a : rec_m.aligns) {
-                        if (a.vdj != "TRBV30") {
-                                nov30aln.push_back(a);
-                        }
-                }
-                if (oc['-'] > 0) {
-                        std::reverse(nov30aln.begin(), nov30aln.end());
-                }
+	int cn = 0;    // number of C segments
+	std::unordered_map<char, int> oc = { {'+', 0}, {'-', 0} };
 
-                // allow C1 to be replaced by C2
-                for (int i = 1; i < nov30aln.size(); i++) {
-                        if (nov30aln[i-1].sR > nov30aln[i].sR) {
-                                if (nov30aln[i].vdj == "TRBC1") {
-                                        if (nov30aln[i-1].sR > (nov30aln[i].sR + 9346)) {
-                                                siq = 0;
-                                        }
-                                }
-                        }
-                }
-                
-                if (siq == 0)
-                        rc_m = "CH"; 
-        }
+	for (int i = 0; i < rec_m.aligns.size(); i++) {
+		if (rec_m.aligns[i].vdj[3] == 'C')
+			cn++;
+		if (rec_m.aligns[i].vdj != "TRBV30") {
+			oc[rec_m.aligns[i].ro] += 1;
+		} else {
+			char o = rec_m.aligns[i].ro == '+' ? '-' : '+';
+			oc[o] += 1;
+		}
+	}
+	int soq = 1;   // same orientation Q
+	if (oc['+'] > 0 && oc['-'] > 0)
+		soq = 0;
+
+	// set recombination code
+	rc_m = "NCH";
+	if (cn > 1 || soq == 0) {
+		rc_m = "CH";
+
+	} else {   
+		int siq = 1;   // check increasing Q
+
+		// remove V30 from the alignment
+		std::vector<DeltaAlignment_t> nov30aln;
+		for (auto a : rec_m.aligns) {
+			if (a.vdj != "TRBV30") {
+				nov30aln.push_back(a);
+			}
+		}
+		if (oc['-'] > 0) {
+			std::reverse(nov30aln.begin(), nov30aln.end());
+		}
+
+		// allow C1 to be replaced by C2
+		for (int i = 1; i < nov30aln.size(); i++) {
+			if (nov30aln[i-1].sR > nov30aln[i].sR) {
+				if (nov30aln[i].vdj == "TRBC1") {
+					if (nov30aln[i-1].sR > (nov30aln[i].sR + 9346)) {
+						siq = 0;
+					}
+				}
+			}
+		}
+
+		if (siq == 0)
+			rc_m = "CH"; 
+	}
 }
 
 void DeltaFilter_t::annotateQuery() {
@@ -1016,27 +941,27 @@ void DeltaFilter_t::annotateQuery() {
 	// exit if no alignment remains
 	if (rec_m.aligns.size() == 0)
 		return;
-                
-        // get longest non-decreasing or non-increasing sub-alignments
-	LNDIS();
-        
-	// calculate fraction of aligned length
-        
-        al_m = 0;
-        int qs = rec_m.aligns[0].osQ;
-        int qe = rec_m.aligns[0].oeQ;
-        for (int i = 1; i < rec_m.aligns.size(); i++) {
-                if (rec_m.aligns[i].osQ > qe) {
-                        al_m += (qe - qs + 1);
-                        qs = rec_m.aligns[i].osQ;
-                        qe = rec_m.aligns[i].oeQ;
-                } else {
-                        qe = rec_m.aligns[i].oeQ;
-                }
-        }
-        al_m += (qe - qs + 1);
 
-        //al_m = rec_m.aligns.back().oeQ - rec_m.aligns[0].osQ + 1;
+	// get longest non-decreasing or non-increasing sub-alignments
+	LNDIS();
+
+	// calculate fraction of aligned length
+
+	al_m = 0;
+	int qs = rec_m.aligns[0].osQ;
+	int qe = rec_m.aligns[0].oeQ;
+	for (int i = 1; i < rec_m.aligns.size(); i++) {
+		if (rec_m.aligns[i].osQ > qe) {
+			al_m += (qe - qs + 1);
+			qs = rec_m.aligns[i].osQ;
+			qe = rec_m.aligns[i].oeQ;
+		} else {
+			qe = rec_m.aligns[i].oeQ;
+		}
+	}
+	al_m += (qe - qs + 1);
+
+	//al_m = rec_m.aligns.back().oeQ - rec_m.aligns[0].osQ + 1;
 	alf_m = ((float) al_m) / rec_m.lenQ;
 
 	// orient alignments in the order of VDJ
@@ -1048,51 +973,19 @@ void DeltaFilter_t::annotateQuery() {
 	vi = -1;
 	di = -1;
 	ji = -1;
-        //int cn = 0;    // number of C segments
-        //int soq = 1;   // same orientation Q
-        
+	//int cn = 0;    // number of C segments
+	//int soq = 1;   // same orientation Q
+
 	for (int i = 0; i < rec_m.aligns.size(); i++) {
 		if (rec_m.aligns[i].ge == "V0" || rec_m.aligns[i].ge == "V2") {
 			vi = i;
-                } else if (rec_m.aligns[i].ge == "D0" && (vi != -1 || di == -1)) {
+		} else if (rec_m.aligns[i].ge == "D0" && (vi != -1 || di == -1)) {
 			di = i;
 		} else if (rec_m.aligns[i].ge == "J0" && (vi != -1 || di != -1 || ji == -1)) {
 			ji = i;
 		}
-                /*
-                if (rec_m.aligns[i].vdj[3] == 'C')
-                        cn++;
-                if (rec_m.aligns[i].ro != ori_m) {
-                        if (rec_m.aligns[i].vdj != "TRBV30")
-                                soq = 0;
-                }
-                */
-        }
+	}
 
-        /*
-        // check increasing Q while allowing C1 to be replaced by C2
-        int siq = 1;
-        std::vector<DeltaAlignment_t> nov30aln;
-        for (auto a : rec_m.aligns) {
-                if (a.vdj != "TRBV30") {
-                        nov30aln.push_back(a);
-                }
-        }
-        for (int i = 1; i < nov30aln.size(); i++) {
-                if (nov30aln[i-1].sR > nov30aln[i].sR) {
-                        if (nov30aln[i].vdj[3] == 'C' && nov30aln[i].vdj[4] == '1') {
-                                if (nov30aln[i-1].sR > (nov30aln[i].sR + 9346)) {
-                                        siq = 0;
-                                }
-                        }
-                }
-        }
-        
-        // set recombination code
-        rc_m = "NCH";
-        if (cn > 1 || soq == 0 || siq == 0)
-                rc_m = "CH";
-        */    
 
 	// set regularity
 	std::string combv = "---";
@@ -1115,34 +1008,34 @@ void DeltaFilter_t::annotateQuery() {
 	}
 	if (vi != -1 && ji != -1) {
 		if ((ji - vi) == 1 || ((ji-vi) == 2 && di == (vi+ji)/2)) {
-                        reg_m = 1;
-                        int vq = 1;
-                        if (vi > 1) {
-                                vq = 0;
-                        } else if (vi == 1) {
-                                if (rec_m.aligns[0].ge != "V1" || rec_m.aligns[0].vdj != rec_m.aligns[1].vdj)
-                                        vq = 0;
-                        }
-                        int cq = 1;
-                        if (ji < rec_m.aligns.size()-2) {
-                                cq = 0;
-                        } else if (ji == rec_m.aligns.size()-2) {
-                                if (rec_m.aligns[ji+1].ge != "C1")
-                                        cq = 0;
-                        }
-                        if (vq == 1 && cq == 1)
-                                reg_m = 2;
-                } else {
-                        reg_m = 0;
-                }
+			reg_m = 1;
+			int vq = 1;
+			if (vi > 1) {
+				vq = 0;
+			} else if (vi == 1) {
+				if (rec_m.aligns[0].ge != "V1" || rec_m.aligns[0].vdj != rec_m.aligns[1].vdj)
+					vq = 0;
+			}
+			int cq = 1;
+			if (ji < rec_m.aligns.size()-2) {
+				cq = 0;
+			} else if (ji == rec_m.aligns.size()-2) {
+				if (rec_m.aligns[ji+1].ge != "C1")
+					cq = 0;
+			}
+			if (vq == 1 && cq == 1)
+				reg_m = 2;
+		} else {
+			reg_m = 0;
+		}
 	} else {
 		reg_m = 0;
 	}
 
-        if (alf_m < 0.5) {
-                reg_m = -1;
-        }
-        
+	if (alf_m < 0.5) {
+		reg_m = -1;
+	}
+
 	CombineVDJ_m = combv + ":" + combd + ":" + combj;
 }
 
@@ -1159,44 +1052,24 @@ void DeltaFilter_t::LNDIS() {
 		nifrom[i] = -1;
 	}
 
-	/*
-	std::cout << "alQ: ";
-	for (int i = 0; i < rec_m.aligns.size(); i++) {
-		std::cout << " " << rec_m.aligns[i].alQ << " " << rec_m.aligns[i].ge;
-	}
-	std::cout << std::endl;
-	*/
 
 	for (int i = 1; i < rec_m.aligns.size(); i++) {
 		for (int j = 0; j < i; j++) {
 			if (rec_m.aligns[j].ge != "I0" && rec_m.aligns[i].ge != "I0" &&
-			    GEO[rec_m.aligns[j].ge] <= GEO[rec_m.aligns[i].ge] &&
-			    (lndsl[j] + rec_m.aligns[i].alQ) > lndsl[i]) {
+					GEO[rec_m.aligns[j].ge] <= GEO[rec_m.aligns[i].ge] &&
+					(lndsl[j] + rec_m.aligns[i].alQ) > lndsl[i]) {
 				lndsl[i] = lndsl[j] + rec_m.aligns[i].alQ;
 				ndfrom[i] = j;
 			}
 			if (rec_m.aligns[j].ge != "I0" && rec_m.aligns[i].ge != "I0" &&
-			    GEO[rec_m.aligns[j].ge] >= GEO[rec_m.aligns[i].ge] &&
-			    (lnisl[j] + rec_m.aligns[i].alQ) > lnisl[i]) {
+					GEO[rec_m.aligns[j].ge] >= GEO[rec_m.aligns[i].ge] &&
+					(lnisl[j] + rec_m.aligns[i].alQ) > lnisl[i]) {
 				lnisl[i] = lnisl[j] + rec_m.aligns[i].alQ;
 				nifrom[i] = j;
 			}
 		}
 	}
 
-	/*
-	std::cout << "lndsl: ";
-	for (int i = 0; i < rec_m.aligns.size(); i++) {
-		std::cout << " " << lndsl[i];
-	}
-	std::cout << std::endl;
-
-	std::cout << "lnisl: ";
-	for (int i = 0; i < rec_m.aligns.size(); i++) {
-		std::cout << " " << lnisl[i];
-	}
-	std::cout << std::endl;
-	*/
 
 	int ndmaxl = 0;
 	int nimaxl = 0;
@@ -1255,8 +1128,8 @@ void DeltaFilter_t::printResult() {
 	// if no alignment remains
 	if (rec_m.aligns.size() == 0)
 		return;
-	
-	std::cout << rec_m.idQ << "\t" << rec_m.lenQ;
+
+	std::cout << rec_m.idQ << "\t" << 0 << "\t" << rec_m.lenQ;
 	std::cout << "\t" << reg_m << "\t" << rec_m.idR << "\t" << ori_m;
 	std::cout << "\t" << CombineVDJ_m;
 
@@ -1279,8 +1152,8 @@ void DeltaFilter_t::printResult(std::ofstream &cout) {
 	// if no alignment remains
 	if (rec_m.aligns.size() == 0)
 		return;
-	
-	cout << rec_m.idQ << "\t" << rec_m.lenQ;
+
+	cout << rec_m.idQ << "\t" << 0 << "\t" << rec_m.lenQ;
 	cout << "\t" << reg_m << "\t" << rec_m.idR << "\t" << ori_m;
 	cout << "\t" << CombineVDJ_m;
 
@@ -1296,6 +1169,6 @@ void DeltaFilter_t::printResult(std::ofstream &cout) {
 			cout << "|" << m->concise_form();
 		}
 	}
-        cout << "\t" << vi << "," << di << "," << ji << "\t" << al_m;
+	cout << "\t" << vi << "," << di << "," << ji << "\t" << al_m;
 	cout << std::endl;
 }

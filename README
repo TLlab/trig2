@@ -5,8 +5,8 @@ TRIg-2.0
 TRIg is written in perl, cpp and requires USEARCH for merge paired-end and
 MUMMER for initial alignments. Users must install USEARCH and MUMMER.
 They can obtained as follows:
-* USEARCH: "https://www.drive5.com/usearch/"
-* MUMMER : "http://mummer.sourceforge.net/"
+* USEARCH (v11.0.667) : "https://www.drive5.com/usearch/"
+* MUMMER  (v3.23)     : "http://mummer.sourceforge.net/"
 TRIg are ready for use after clone as follows.
 --------------------------------------------------------------------------------
 
@@ -47,20 +47,33 @@ read.vdjdelta: alignments in delta format
 
 read.vdjdelta:
 (1) read ID
-(2) sequence length
-(3) flag [0, 1, 2]
-(4) species and gene
-(5) strand [+, -]
-(6) VDJ annotation
+(2) sequence type [0, 1, 2]
+    0: merge read 
+    1: read1
+    2: read2
+(3) sequence length
+(4) flag [-1, 0, 1, 2]
+   -1: alignment length fraction less than cut off (default: 0.5)
+    0: non-regular sequence
+    1: regular sequence (but contain more than one V(D)J genes)
+    2: regular sequence (contain only one of each V(D)J gene)
+(5) species and gene
+(6) strand [+, -]
+(7) VDJ annotation
     Three symbols (~|:) are used to indicate recombination.
     "~" : a read segment stretching from one region to another, e.g., "TRBJ2-2P~TRBJ2-3".
     "|" : a read segment aligned equally well to two regions, e.g., "TRBV6-2|TRBV6-3".
     ":" : concatenation of two regions, e.g., "TRBV27:TRBJ1-6"
-(7) annotation of all aligned segments (from query start to end)
+(8) VDJ delta
+    annotation of all aligned segments (from query start to end)
+    [sp_gene]:[VDJ]:[ref_pos]:[qry_pos]:[mmgp]:[gap_pos]
+(9) VDJ index in vdjdelta
+    [V_index, D_index, J_index]
+(10)align length
 
 read.cdr3:
 (1) read ID
-(2) flag [0, 1, 2]
+(2) flag [-1, 0, 1, 2] (same as read.vdjdelta)
 (3) VJ combination and CDR3 sequences
 (4) sequence quality
 (5) protein sequence

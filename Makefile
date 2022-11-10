@@ -9,7 +9,7 @@ all := ProcessAlignment
 
 ProcessAlignment:
 		@cd $(SRC_DIR); make
-		@ln -s ../$(SRC_DIR)/$(all) $(BIN_DIR)
+		@ln -fs ../$(SRC_DIR)/$(all) $(BIN_DIR)
 
 #-------------------------------------
 
