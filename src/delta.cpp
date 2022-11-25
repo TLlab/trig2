@@ -1,5 +1,6 @@
 #include "delta.hpp"
 #include "fastx_read.hpp"
+#include "vdjreader.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -16,83 +17,10 @@ std::map<char, int> GGO = { {'V', 0}, {'J', 1}, {'D', 2}, {'C', 3}, {'I', 4} };
 std::map<std::string, int> GEO = { {"V0", 0}, {"V1", 1}, {"V2", 2}, {"D0", 3}, {"J0", 4},
 	{"C1", 5}, {"C2", 6}, {"C3", 7}, {"C4", 8}};
 
-//====================================================VDJReader_t=====
+// initialization static member
+std::unordered_map< std::string, std::string > DeltaFilter_t::refseq_m;
+std::unordered_map< std::string, std::vector<VDJInfo_t> > DeltaFilter_t::VDJInfo_m;
 
-void VDJReader_t::open(const std::string &vdj_path) {
-	vdj_path_m = vdj_path;
-	vdj_stream_m.open(vdj_path_m);
-	CheckStream();
-	is_open_m = true;
-}
-
-bool VDJReader_t::readNext() {
-	if (vdj_stream_m.peek() == EOF)
-		return false;
-
-	// make way for the new vdj info
-	info_m.clear();
-
-	// read the vdj information
-	VDJInfo_t info;
-	std::string exon_range;
-	std::vector<int> each_sted;   // each range of start and end
-
-	vdj_stream_m >> info.species_gene;   // e.g., hsa_trb, mmu_igh
-	vdj_stream_m >> info.vdj;            // e.g., V3-1, D1, J2-3
-	vdj_stream_m.ignore(2);              // i.e., F, P
-	vdj_stream_m >> info.strand;         // i.e., +, -
-	vdj_stream_m >> exon_range;          // e.g., 1..41,159..450
-
-	info.species = info.species_gene.substr(0, 3);
-	info.gene = info.species_gene.substr(4, 3);
-	std::transform(info.gene.begin(), info.gene.end(), info.gene.begin(), ::toupper);
-
-	// flush the remaining whitespace
-	while(vdj_stream_m.get() != '\n');
-
-	// split string by [.,]
-	int num_of_exon = 1;
-	std::string temp;
-	for(int i = 0; i < (int)exon_range.size(); i++) {
-		if(exon_range[i] == '.') {
-			each_sted.push_back(stoi(temp));
-			temp = "";
-			i++;   // skip next dot
-		} else if (exon_range[i] == ',') {
-			each_sted.push_back(stoi(temp));
-			temp = "";
-			num_of_exon++;
-		} else {
-			temp += exon_range[i];
-		}
-	}
-	each_sted.push_back(stoi(temp));
-
-	// push each vdj info to vector<VDJInfo_t>
-	if (num_of_exon == 1) {
-		info.vdj_exon = info.vdj + "_0";
-		info.exon_start = each_sted[0];
-		info.exon_end = each_sted[1];
-		info_m.push_back(info);
-	} else {
-		if (info.strand == '+') {
-			for (int i = 1; i <= num_of_exon; i++) {
-				info.vdj_exon = info.vdj + "_" + std::to_string(i);
-				info.exon_start = each_sted[i*2-2];
-				info.exon_end = each_sted[i*2-1];
-				info_m.push_back(info);
-			}
-		} else { // strand == '-'
-			for (int i = 1; i <= num_of_exon; i++) {
-				info.vdj_exon = info.vdj + "_" + std::to_string(num_of_exon-i+1);
-				info.exon_start = each_sted[i*2-2];
-				info.exon_end = each_sted[i*2-1];
-				info_m.push_back(info);
-			}
-		}
-	}
-	return true;
-}
 
 //====================================================DeltaAlignment_t===
 
@@ -102,8 +30,8 @@ int DeltaAlignment_t::overlapQ(const DeltaAlignment_t &b) {
 	return q;
 }
 
-std::string DeltaAlignment_t::concise_form() {
-	std::string cf = "hsa_trb:" + this->vdje + ":";
+std::string DeltaAlignment_t::concise_form() const {
+	std::string cf = this->idR + ":" + this->vdje + ":";
 	cf += std::to_string(this->sR) + "-" + std::to_string(this->eR) + ":";
 	cf += std::to_string(this->sQ) + "-" + std::to_string(this->eQ) + ":";
 	cf += std::to_string(this->mmgp) + ":";
@@ -354,6 +282,9 @@ bool DeltaReader_t::readNextRecord(const bool read_deltas) {
 	if(delta_stream_m.peek() != '>')
 		return false;
 
+	// get previous record_m position
+	prepos_m = delta_stream_m.tellg();
+
 	// make way for the new record
 	record_m.clear();
 	is_record_m = true;
@@ -372,6 +303,7 @@ bool DeltaReader_t::readNextRecord(const bool read_deltas) {
 	DeltaAlignment_t align;
 	while(delta_stream_m.peek () != '>' && delta_stream_m.peek () != EOF) {
 		readNextAlignment(align, read_deltas);
+		align.idR = record_m.idR;
 		record_m.aligns.push_back(align);
 	}
 
@@ -471,17 +403,18 @@ void DeltaFilter_t::getOptimalSet() {
 void DeltaFilter_t::annotateVDJ() {
 	for(auto i = rec_m.aligns.begin(); i != rec_m.aligns.end(); i++) {
 
+		const std::string ref = i->idR;
 		const int rs = i->sR;          // alignment range start
 		const int re = i->eR;          // alignment range end
 		int si = 0;                    // start of info
-		int ei = VDJInfo_m.size()-1;   // end of info
+		int ei = VDJInfo_m[ref].size()-1;   // end of info
 		std::string annot;
 		std::string annot_exon;
 
 		// range start is after start of the last vdj
-		if (rs > VDJInfo_m[ei].exon_start) {
-			i->vdj = rs > VDJInfo_m[ei].exon_end ? VDJInfo_m[ei].gene + "I" : VDJInfo_m[ei].vdj;
-			i->vdje = rs > VDJInfo_m[ei].exon_end ? VDJInfo_m[ei].gene + "I_0" : VDJInfo_m[ei].vdj_exon;
+		if (rs > VDJInfo_m[ref][ei].exon_start) {
+			i->vdj = rs > VDJInfo_m[ref][ei].exon_end ? VDJInfo_m[ref][ei].gene + "I" : VDJInfo_m[ref][ei].vdj;
+			i->vdje = rs > VDJInfo_m[ref][ei].exon_end ? VDJInfo_m[ref][ei].gene + "I_0" : VDJInfo_m[ref][ei].vdj_exon;
 			i->ge = "I0";
 			continue;
 		}
@@ -489,28 +422,28 @@ void DeltaFilter_t::annotateVDJ() {
 		// locate the range start
 		int mid = (si+ei) / 2;
 		while (mid != si) {
-			rs < VDJInfo_m[mid].exon_start ? ei = mid : si = mid;
+			rs < VDJInfo_m[ref][mid].exon_start ? ei = mid : si = mid;
 			mid = (si+ei) / 2;
 		}
 
 		// get vdj exon from the starting location
-		if (rs <= VDJInfo_m[si].exon_end) {
-			annot = VDJInfo_m[si].vdj;
-			annot_exon = VDJInfo_m[si].vdj_exon;
+		if (rs <= VDJInfo_m[ref][si].exon_end) {
+			annot = VDJInfo_m[ref][si].vdj;
+			annot_exon = VDJInfo_m[ref][si].vdj_exon;
 		}
 		while(++si) {
-			if (si > VDJInfo_m.size()-1 || re < VDJInfo_m[si].exon_start)
+			if (si > VDJInfo_m[ref].size()-1 || re < VDJInfo_m[ref][si].exon_start)
 				break;
 			if (!annot_exon.empty()) {
 				annot += "~";
 				annot_exon += "~";
 			}
-			annot += VDJInfo_m[si].vdj;
-			annot_exon += VDJInfo_m[si].vdj_exon;
+			annot += VDJInfo_m[ref][si].vdj;
+			annot_exon += VDJInfo_m[ref][si].vdj_exon;
 		}
 		if (annot_exon.empty()) {
-			i->vdj = VDJInfo_m[si].gene + "I";
-			i->vdje = VDJInfo_m[si].gene + "I_0";
+			i->vdj = VDJInfo_m[ref][si].gene + "I";
+			i->vdje = VDJInfo_m[ref][si].gene + "I_0";
 			i->ge = "I0";
 			continue;
 		}
@@ -807,16 +740,16 @@ void DeltaFilter_t::adjustOverlap() {
 
 		// load reference and query segments
 		if ((i-1)->rseg.length()==0) {
-			(i-1)->rseg = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->sR, (i-1)->eR);
-			(i-1)->rlfk = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->sR-2, (i-1)->sR-1);
-			(i-1)->rrfk = FASTA_t::subseq(refseq_m[rec_m.idR], (i-1)->eR+1, (i-1)->eR+2);
+			(i-1)->rseg = FASTA_t::subseq(refseq_m[i->idR], (i-1)->sR, (i-1)->eR);
+			(i-1)->rlfk = FASTA_t::subseq(refseq_m[i->idR], (i-1)->sR-2, (i-1)->sR-1);
+			(i-1)->rrfk = FASTA_t::subseq(refseq_m[i->idR], (i-1)->eR+1, (i-1)->eR+2);
 			(i-1)->qseg = FASTA_t::subseq(qryseq_m, (i-1)->osQ, (i-1)->oeQ);
 			if ((i-1)->ro == '-')
 				(i-1)->qseg = FASTA_t::revcom((i-1)->qseg);
 		}
-		i->rseg = FASTA_t::subseq(refseq_m[rec_m.idR], i->sR, i->eR);
-		i->rlfk = FASTA_t::subseq(refseq_m[rec_m.idR], i->sR-2, i->sR-1);
-		i->rrfk = FASTA_t::subseq(refseq_m[rec_m.idR], i->eR+1, i->eR+2);
+		i->rseg = FASTA_t::subseq(refseq_m[i->idR], i->sR, i->eR);
+		i->rlfk = FASTA_t::subseq(refseq_m[i->idR], i->sR-2, i->sR-1);
+		i->rrfk = FASTA_t::subseq(refseq_m[i->idR], i->eR+1, i->eR+2);
 		i->qseg = FASTA_t::subseq(qryseq_m, i->osQ, i->oeQ);
 		if (i->ro == '-')
 			i->qseg = FASTA_t::revcom(i->qseg);
@@ -986,6 +919,12 @@ void DeltaFilter_t::annotateQuery() {
 		}
 	}
 
+	// set idR
+	if (ji != -1) {
+		rec_m.idR = rec_m.aligns[ji].idR;
+	} else if (vi != -1) {
+		rec_m.idR = rec_m.aligns[vi].idR;
+	}
 
 	// set regularity
 	std::string combv = "---";
@@ -1123,52 +1062,54 @@ void DeltaFilter_t::update_VDJ_index() {
 
 //=============================================
 
-void DeltaFilter_t::printResult() {
+void DeltaFilter_t::printResult(std::ostream &out) {
 
 	// if no alignment remains
 	if (rec_m.aligns.size() == 0)
 		return;
 
-	std::cout << rec_m.idQ << "\t" << rec_m.lenQ;
-	std::cout << "\t" << reg_m << "\t" << rec_m.idR << "\t" << ori_m;
-	std::cout << "\t" << CombineVDJ_m;
+	out << rec_m.idQ << "\t" << rec_m.lenQ;
+	out << "\t" << reg_m << "\t" << rec_m.idR << "\t" << ori_m;
+	out << "\t" << CombineVDJ_m;
 
-	std::cout << "\t" << rec_m.aligns[0].concise_form();
+	out << "\t" << rec_m.aligns[0].concise_form();
+
 	for (auto m = rec_m.aligns[0].gm.begin(); m != rec_m.aligns[0].gm.end(); m++) {
-		std::cout << "|" << m->concise_form();
+		out << "|" << m->concise_form();
 	}
 	for (auto i = rec_m.aligns.begin()+1; i != rec_m.aligns.end(); i++) {
-		std::cout << " ";
-		std::cout << i->concise_form();
+		out << " ";
+		out << i->concise_form();
 		for (auto m = i->gm.begin(); m != i->gm.end(); m++) {
-			std::cout << "|" << m->concise_form();
+			out << "|" << m->concise_form();
 		}
 	}
-	std::cout << std::endl;
+	out << "\t" << vi << "," << di << "," << ji << "\t" << al_m;
+	out << std::endl;
 }
 
-void DeltaFilter_t::printResult(std::ofstream &cout) {
-
+std::ostream& operator<< (std::ostream& out, const DeltaFilter_t &df) {
+	
 	// if no alignment remains
-	if (rec_m.aligns.size() == 0)
-		return;
+	if (df.rec_m.aligns.size() == 0)
+		return out;
 
-	cout << rec_m.idQ << "\t" << rec_m.lenQ;
-	cout << "\t" << reg_m << "\t" << rec_m.idR << "\t" << ori_m;
-	cout << "\t" << CombineVDJ_m;
+	out << df.rec_m.idQ << "\t" << df.rec_m.lenQ;
+	out << "\t" << df.reg_m << "\t" << df.rec_m.idR << "\t" << df.ori_m;
+	out << "\t" << df.CombineVDJ_m;
 
-	cout << "\t" << rec_m.aligns[0].concise_form();
+	out << "\t" << df.rec_m.aligns[0].concise_form();
 
-	for (auto m = rec_m.aligns[0].gm.begin(); m != rec_m.aligns[0].gm.end(); m++) {
-		cout << "|" << m->concise_form();
+	for (auto m = df.rec_m.aligns[0].gm.begin(); m != df.rec_m.aligns[0].gm.end(); m++) {
+		out << "|" << m->concise_form();
 	}
-	for (auto i = rec_m.aligns.begin()+1; i != rec_m.aligns.end(); i++) {
-		cout << " ";
-		cout << i->concise_form();
+	for (auto i = df.rec_m.aligns.begin()+1; i != df.rec_m.aligns.end(); i++) {
+		out << " ";
+		out << i->concise_form();
 		for (auto m = i->gm.begin(); m != i->gm.end(); m++) {
-			cout << "|" << m->concise_form();
+			out << "|" << m->concise_form();
 		}
 	}
-	cout << "\t" << vi << "," << di << "," << ji << "\t" << al_m;
-	cout << std::endl;
+	out << "\t" << df.vi << "," << df.di << "," << df.ji << "\t" << df.al_m;
+	return out;
 }

@@ -11,6 +11,9 @@
 #include <unordered_map>
 #include <algorithm>
 
+// initialization static object in ExtractCDR3_t
+std::map<std::string, int> ExtractCDR3_t::cdr3p_m;
+
 //================================Translate
 const std::unordered_map<std::string, std::string> aacode = {                                                                                                                   
     {"TTT", "F"}, {"TTC", "F"}, {"TTA", "L"}, {"TTG", "L"},
@@ -189,22 +192,6 @@ int ExtractCDR3_t::AlignmentRpQp(DeltaAlignment_t align) {
 	return align.sQ + qi * o;
 }
 
-void ExtractCDR3_t::printResult() {
-	std::cout << idQ_m << "\t" << reg_m << "\t";
-	std::cout << cdr3c_m[0];
-	for(auto c = cdr3c_m.begin()+1; c != cdr3c_m.end(); c++)
-		std::cout << "|" << *c;
-	std::cout << "\t";
-	std::cout << cdr3q_m[0];
-	for(auto q = cdr3q_m.begin()+1; q != cdr3q_m.end(); q++)
-		std::cout << "|" << *q;
-	std::cout << "\t";
-	std::cout << cdr3a_m[0];
-	for(auto a = cdr3a_m.begin()+1; a != cdr3a_m.end(); a++)
-		std::cout << "|" << *a;
-	std::cout << std::endl;
-}
-
 void ExtractCDR3_t::printResult(std::ofstream &cout) {
 	cout << idQ_m << "\t" << reg_m << "\t";
 	cout << cdr3c_m[0];
@@ -221,4 +208,22 @@ void ExtractCDR3_t::printResult(std::ofstream &cout) {
 		cout << "|" << *a;
 	
 	cout << std::endl;
+}
+
+std::ostream& operator<< (std::ostream &out, const ExtractCDR3_t &et) {
+	out << et.idQ_m << "\t" << et.reg_m << "\t";
+	out << et.cdr3c_m[0];
+	
+	for(auto c = et.cdr3c_m.begin()+1; c != et.cdr3c_m.end(); c++)
+		out << "|" << *c;
+	out << "\t";
+	out << et.cdr3q_m[0];
+	for(auto q = et.cdr3q_m.begin()+1; q != et.cdr3q_m.end(); q++)
+		out << "|" << *q;
+	out << "\t";
+	out << et.cdr3a_m[0];
+	for(auto a = et.cdr3a_m.begin()+1; a != et.cdr3a_m.end(); a++)
+		out << "|" << *a;
+	
+	return out;
 }

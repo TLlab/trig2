@@ -1,12 +1,12 @@
-TRIg-2.0
+TRIg2
 
 1. Installation
 --------------------------------------------------------------------------------
-TRIg is written in perl, cpp and requires USEARCH for merge paired-end and
+TRIg2 is written in perl, cpp and requires USEARCH for merge paired-end and
 MUMMER for initial alignments. Users must install USEARCH and MUMMER.
 They can obtained as follows:
-* USEARCH (v11.0.667) : "https://www.drive5.com/usearch/"
-* MUMMER  (v3.23)     : "http://mummer.sourceforge.net/"
+* USEARCH (v11.0.667) : https://www.drive5.com/usearch/
+* MUMMER  (v3.23)     : http://mummer.sourceforge.net/
 TRIg are ready for use after clone as follows.
 --------------------------------------------------------------------------------
 
@@ -26,6 +26,7 @@ e.g.   : trig.pl -s hsa -g trb -o test R1.fq R2.fq
 
 option : -species  <str>    species name                 [hsa*, mmu] (*default)
          -gene     <str>    immune receptor gene         [tra, trb*, trd, trg, igh, igl, igk]
+                            can also be combined, e.g.,  [tra,trb]
          -outdir   <str>    output directory name        [output*]
          -minmatch <int>    minimal match of nucmer      [15*]
          -adjolq   <int>    adjust overlap Q             [0, 1*]
@@ -52,11 +53,11 @@ read.vdjdelta:
     1: read1
     2: read2
 (3) sequence length
-(4) flag [-1, 0, 1, 2]
+(4) reg [-1, 0, 1, 2]
    -1: alignment length fraction less than cut off (default: 0.5)
-    0: non-regular sequence
-    1: regular sequence (but contain more than one V(D)J genes)
-    2: regular sequence (contain only one of each V(D)J gene)
+    0: non-recombine sequence
+    1: recombine sequence (but contain more than one V(D)J genes)
+    2: recombine sequence (contain only one of each V(D)J gene)
 (5) species and gene
 (6) strand [+, -]
 (7) VDJ annotation
@@ -73,7 +74,7 @@ read.vdjdelta:
 
 read.cdr3:
 (1) read ID
-(2) flag [-1, 0, 1, 2] (same as read.vdjdelta)
+(2) reg [-1, 0, 1, 2] (same as read.vdjdelta)
 (3) VJ combination and CDR3 sequences
 (4) sequence quality
 (5) protein sequence

@@ -89,19 +89,11 @@ public:
 		getline(ss, d_m, ':');
 		getline(ss, j_m, ':');
 
-		//FIXME:
 		valn_m = rec.aligns[vi];
 		valn_m.gm.push_back(valn_m);
 
 		jaln_m = rec.aligns[ji];
 		jaln_m.gm.push_back(jaln_m);
-/*
-		std::cout << "vi: " << vi << " " << valn_m.vdj << " " << "ji: " << ji << " " << jaln_m.vdj << std::endl;
-		for (auto i : rec.aligns) {
-			std::cout << i.vdj << " ";
-		}
-		std::cout << std::endl;
-*/
 		cdr3seq_m = cdr3qua_m = cdr3aa_m = "---";
 	}
 	~ExtractCDR3_t() {
@@ -133,8 +125,8 @@ public:
 		fqqua_m = qua;
 	}
 	void extractCDR3();
-	void printResult();
 	void printResult(std::ofstream &cout);
+	friend std::ostream& operator<< (std::ostream &out, const ExtractCDR3_t &et);
 };
 
 #endif /* extractCDR3.h */

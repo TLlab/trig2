@@ -8,6 +8,8 @@
 #include <map>
 #include <unordered_map>
 
+#include "vdjreader.hpp"
+
 #define MSC  3
 #define MMSC -7
 #define GSC  -7
@@ -15,80 +17,9 @@
 #define SPC  1
 
 
-//=======================================================
-
-// information of a VDJ exon
-struct VDJInfo_t {
-	std::string species_gene;
-	std::string species;
-	std::string gene;
-	std::string vdj;
-	std::string vdj_exon;
-	char strand;
-	int exon_start;
-	int exon_end;
-	
-	VDJInfo_t() {
-		clear();
-	}
-	
-	void clear() {
-		species_gene.erase();
-		species.erase();
-		gene.erase();
-		vdj.erase();
-		vdj_exon.erase();
-		strand = '\0';
-		exon_start = exon_end = 0;
-	}
-};
-
-//====================================================VDJReader_t=====
-
-// for reading VDJ information file
-class VDJReader_t
-{
-private:
-	std::string vdj_path_m;          // vdj file path
-	std::ifstream vdj_stream_m;      // vdj file input stream
-	std::vector<VDJInfo_t> info_m;   // vdj info of all exons of a gene
-	bool is_open_m;                  // vdj stream is open
-	
-	void CheckStream() {
-		if(!vdj_stream_m.good()) {
-			std::cerr << "\033[31mERROR:\033[0m Could not parse vdj file, "
-				  << vdj_path_m << std::endl;
-			exit(1);
-		}
-	}
-
-public:
-	VDJReader_t() {
-		is_open_m = false;
-	}
-	~VDJReader_t() {
-		vdj_stream_m.close();
-		is_open_m = false;
-	}
-
-	void open(const std::string &vdj_path);
-	bool readNext();
-
-	const std::vector<VDJInfo_t> &getperVDJInfo() const {
-		return info_m;
-	}
-
-	std::vector<VDJInfo_t> getallVDJInfo(const std::string &vdj_path) {
-		open(vdj_path);
-		std::vector<VDJInfo_t> VDJInfo;
-
-		while(readNext()) {
-			std::vector<VDJInfo_t> eachVDJ = getperVDJInfo();
-			VDJInfo.insert(VDJInfo.end(), eachVDJ.begin(), eachVDJ.end());
-		}
-		return VDJInfo;
-	}
-};
+/* update :
+ * Add reference information to alignment structure.
+ */
 
 //=======================================================
 
@@ -103,19 +34,23 @@ struct DeltaAlignment_t {
 	int stpc;   // number of stop codons in the alignment
 
 	char ro;    // orientation along reference
-        char go;    // orientation along gene
+	char go;    // orientation along gene
 	int osQ;    // orientated start
 	int oeQ;    // orientated end
 	int alQ;    // query alignment len
   	int gcQ;    // count of gaps in the aligned query
 	int sc;     // score
 	float id;   // identity of alignment
-        bool tbf;   // to be filtered
+	bool tbf;   // to be filtered
 
-        std::string rseg;   // reference segment
-        std::string rlfk;   // reference left flanking bases
-        std::string rrfk;   // reference right flanking bases
-        std::string qseg;   // query segment
+	// update
+	std::string idR;   // reference contig ID
+	int lenR;   // reference contig ID
+
+	std::string rseg;   // reference segment
+	std::string rlfk;   // reference left flanking bases
+	std::string rrfk;   // reference right flanking bases
+	std::string qseg;   // query segment
 	std::string vdj;    // annotated by VDJInfo_t
 	std::string vdje;   // annotated by VDJInfo_t
 	std::string ge;     // annotated by VDJInfo_t
@@ -131,14 +66,17 @@ struct DeltaAlignment_t {
 		sR = eR = sQ = eQ = 0;
 		mmgp = simc = stpc = 0;
 		ro = 'o';
-                go = 'o';
+		go = 'o';
 		osQ = oeQ = alQ = gcQ = 0;
 		id = sc = 0;
-                tbf = false;
-                rseg.erase();
-                rlfk.erase();
-                rrfk.erase();
-                qseg.erase();
+		tbf = false;
+
+		idR.erase();
+
+		rseg.erase();
+		rlfk.erase();
+		rrfk.erase();
+		qseg.erase();
 		vdj.erase();
 		deltas.clear();
 		gm.clear();
@@ -146,10 +84,10 @@ struct DeltaAlignment_t {
 
 	int overlapQ(const DeltaAlignment_t &);
 
-	std::string concise_form();
+	std::string concise_form() const;
 
-        std::vector<std::string> getEndAlignment(const int &, bool);
-        void cutEndAlignment(const int &);
+	std::vector<std::string> getEndAlignment(const int &, bool);
+	void cutEndAlignment(const int &);
 };
 
 //=======================================================
@@ -173,6 +111,12 @@ struct DeltaRecord_t {
 		lenR = lenQ = 0;
 		aligns.clear();
 	}
+
+	void combine_rec(const DeltaRecord_t &R) {
+		idR.erase();
+		lenR = 0;
+		aligns.insert(aligns.end(), R.aligns.begin(), R.aligns.end());
+	}
 };
 
 //====================================================DeltaReader_t===
@@ -189,6 +133,8 @@ private:
 	DeltaRecord_t record_m;       // current delta information record
 	bool is_record_m;             // valid record
 	bool is_open_m;               // delta stream is open
+
+	std::streampos prepos_m;      // previous record position
 
 	bool readNextRecord (const bool read_deltas);
 	void readNextAlignment (DeltaAlignment_t & align, const bool read_deltas);
@@ -227,6 +173,10 @@ public:
 		return readNextRecord (getdeltas);
 	}
 
+	void seek_previous_record() {
+		delta_stream_m.seekg(prepos_m);
+	}
+
 	const std::string &getReferencePath() const {
 		return reference_path_m;
 	}
@@ -249,7 +199,7 @@ private:
 	DeltaRecord_t rec_m;
 
 	int reg_m;                  // regularity of a query
-        char ori_m;                 // orientation of a query
+	char ori_m;                 // orientation of a query
 	std::string CombineVDJ_m;   // combined VDJ annotation
 	std::vector<int> lndisi;    // index of longest non-decreasing sub-alignments
 
@@ -258,19 +208,19 @@ private:
 	void LNDIS();     // get longest non-decreasing or non-increasing sub-alignments
 
 	// find maximal score position in the overlapping alignments
-        int maxScorePosition(std::vector<std::string> &adjseq1, std::vector<std::string> &adjseq2,
-                              std::string &rfk1, std::string &rfk2);
+	int maxScorePosition(std::vector<std::string> &adjseq1, std::vector<std::string> &adjseq2,
+			std::string &rfk1, std::string &rfk2);
 
-        // update vdj_index (whenever sorting rec_m.aligns) (to be discarded)
-        void update_VDJ_index();
+	// update vdj_index (whenever sorting rec_m.aligns) (to be discarded)
+	void update_VDJ_index();
 
 public:
-        int al_m;                                                      // alignment length
+	int al_m;                                                      // alignment length
 	float alf_m;                                                   // aligned length fraction
-        std::string rc_m;                                              // recombination code
+	std::string rc_m;                                              // recombination code
 	static std::unordered_map<std::string, std::string> refseq_m;  // load reference sequence
 	std::string qryseq_m;                                          // load query sequence by one
-	static std::vector<VDJInfo_t> VDJInfo_m;                       // load vdj information
+	static std::unordered_map< std::string, std::vector<VDJInfo_t> > VDJInfo_m;                       // load vdj information
 
 	DeltaFilter_t(DeltaRecord_t &rec) {
                 clear();
@@ -298,10 +248,10 @@ public:
 	void groupAlignment();
 	void filterAlignment();
 	void adjustOverlap();
-        void setRecombCode();
+	void setRecombCode();
 	void annotateQuery();
-	void printResult();
-	void printResult(std::ofstream &cout);
+	void printResult(std::ostream &out);
+	friend std::ostream& operator<< (std::ostream& out, const DeltaFilter_t &df);
 
 	const DeltaRecord_t &getREC() const {
 		return rec_m;
