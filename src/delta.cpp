@@ -740,9 +740,9 @@ void DeltaFilter_t::adjustOverlap() {
 
 		// load reference and query segments
 		if ((i-1)->rseg.length()==0) {
-			(i-1)->rseg = FASTA_t::subseq(refseq_m[i->idR], (i-1)->sR, (i-1)->eR);
-			(i-1)->rlfk = FASTA_t::subseq(refseq_m[i->idR], (i-1)->sR-2, (i-1)->sR-1);
-			(i-1)->rrfk = FASTA_t::subseq(refseq_m[i->idR], (i-1)->eR+1, (i-1)->eR+2);
+			(i-1)->rseg = FASTA_t::subseq(refseq_m[(i-1)->idR], (i-1)->sR, (i-1)->eR);
+			(i-1)->rlfk = FASTA_t::subseq(refseq_m[(i-1)->idR], (i-1)->sR-2, (i-1)->sR-1);
+			(i-1)->rrfk = FASTA_t::subseq(refseq_m[(i-1)->idR], (i-1)->eR+1, (i-1)->eR+2);
 			(i-1)->qseg = FASTA_t::subseq(qryseq_m, (i-1)->osQ, (i-1)->oeQ);
 			if ((i-1)->ro == '-')
 				(i-1)->qseg = FASTA_t::revcom((i-1)->qseg);
