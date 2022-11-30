@@ -15,6 +15,19 @@ use Fastx qw(Fastq2Fasta Fasta2Fastq SplitFastq SplitFasta);
 # to do : table and graphics (use VDJtools)
 
 
+############################## check command ###############################
+sub check_command {
+    my $check = `sh -c 'command -v $_[0]'`;
+	unless ($check) {
+		print "Command $_[0] not found.\n\n";
+		exit 1;
+	}
+}
+
+check_command ('usearch');
+check_command ('nucmer');
+
+
 ############################## set parameters ##############################
 
 # minmatch : minimal match for nucmer alignment
