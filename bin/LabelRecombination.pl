@@ -130,7 +130,7 @@ sub Category {
 
 	# C1 J2 -> J2 C2 (also change reference position)
 	@delta = CorrectC1C2Ambiguous(\@delta, $uo[0]) if @uo == 1;
-	@delta = MergeBrokenAlignment(\@delta, $uo[0]) if @uo == 1;
+	#@delta = MergeBrokenAlignment(\@delta, $uo[0]) if @uo == 1;
 
 	foreach my $d (@delta) {
 		if ($d =~ /V/ && $d =~ /_1/ && $d !~ /~/) {

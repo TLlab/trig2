@@ -339,6 +339,17 @@ if ($peq) {
         `ln -s unmerged.vdjdelta read.vdjdelta`;
         `ln -s unmerged.cdr3 read.cdr3`;
     }
+} else {
+	open IN, "read.vdjdelta";
+	open OUT, ">merged.vdjdelta";
+	while(<IN>) {
+			my @F = split"\t";
+			print OUT join "\t", $F[0], 0, @F[1..$#F];
+	}
+	close IN;
+	close OUT;
+	unlink("read.vdjdelta");
+	rename("merged.vdjdelta", "read.vdjdelta");
 }
 
 `rm *read.*.fa`;
@@ -351,6 +362,9 @@ $command = "CorrectCDR3Error.pl read.cdr3 > clone.txt";
 
 $command = "CloneStat.pl clone.txt";
 `$command`;
+
+$command = "LabelRecombination.pl read.vdjdelta > read.lab";
+`$command` if $gene eq "trb";
 
 # finish log
 $date = `date`;
